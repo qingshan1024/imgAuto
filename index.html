@@ -122,6 +122,18 @@
             max-width: 100%;
             border-radius: 10px;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .image-preview canvas:hover {
+            transform: scale(1.02);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .image-preview.drag-over {
+            background: #e8eaff;
+            border: 3px dashed #667eea;
         }
 
         .image-info {
@@ -389,8 +401,8 @@
                 <div class="file-info" id="fileInfo"></div>
 
                 <div class="preview-container">
-                    <div class="image-preview">
-                        <h3>原始图片</h3>
+                    <div class="image-preview" id="originalPreview">
+                        <h3>原始图片 (点击或拖拽替换)</h3>
                         <canvas id="originalCanvas"></canvas>
                         <div class="image-info" id="originalInfo"></div>
                     </div>
@@ -433,6 +445,9 @@
                         <div class="control-group">
                             <label>质量: <span class="range-value" id="qualityValue">80</span>%</label>
                             <input type="range" id="qualitySlider" min="1" max="100" value="80">
+                        </div>
+                        <div class="control-group">
+                            <label>预估压缩后大小: <span class="range-value" id="compressedSize">-</span></label>
                         </div>
                         <div class="control-group">
                             <label>最大宽度 (px)</label>
@@ -540,8 +555,39 @@
                     editedCtx.drawImage(img, 0, 0);
                     
                     updateImageInfo();
+                    updateCompressedSize();
                     editorSection.classList.add('active');
                     uploadSection.style.display = 'none';
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function handleReplaceImage(file) {
+            if (!file.type.startsWith('image/')) {
+                showNotification('请上传图片文件！', 'error');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    originalImage = img;
+                    currentImage = img;
+                    
+                    originalCanvas.width = img.width;
+                    originalCanvas.height = img.height;
+                    originalCtx.drawImage(img, 0, 0);
+                    
+                    editedCanvas.width = img.width;
+                    editedCanvas.height = img.height;
+                    editedCtx.drawImage(img, 0, 0);
+                    
+                    updateImageInfo();
+                    updateCompressedSize();
+                    showNotification('图片已替换！');
                 };
                 img.src = e.target.result;
             };
@@ -556,6 +602,24 @@
             return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
         }
 
+        function updateCompressedSize() {
+            if (!editedCanvas) return;
+            
+            const quality = parseInt(document.getElementById('qualitySlider').value) / 100;
+            let mimeType = `image/${selectedFormat}`;
+            
+            if (selectedFormat === 'jpeg') {
+                mimeType = 'image/jpeg';
+            }
+            
+            const dataUrl = editedCanvas.toDataURL(mimeType, quality);
+            const base64Length = dataUrl.length - (dataUrl.indexOf(',') + 1);
+            const padding = (base64Length % 4) ? 4 - (base64Length % 4) : 0;
+            const binaryLength = (base64Length * 3) / 4 - padding;
+            
+            document.getElementById('compressedSize').textContent = formatFileSize(binaryLength);
+        }
+
         function updateImageInfo() {
             document.getElementById('originalInfo').innerHTML = `
                 尺寸: ${originalCanvas.width} × ${originalCanvas.height} px
@@ -567,6 +631,7 @@
 
         document.getElementById('qualitySlider').addEventListener('input', (e) => {
             document.getElementById('qualityValue').textContent = e.target.value;
+            updateCompressedSize();
         });
 
         document.getElementById('cropBtn').addEventListener('click', () => {
@@ -703,6 +768,38 @@
             originalImage = null;
             currentImage = null;
             document.getElementById('fileInfo').innerHTML = '';
+        });
+
+        const originalPreview = document.getElementById('originalPreview');
+        
+        originalPreview.addEventListener('click', () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = (e) => {
+                if (e.target.files.length > 0) {
+                    handleReplaceImage(e.target.files[0]);
+                }
+            };
+            input.click();
+        });
+
+        originalPreview.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            originalPreview.classList.add('drag-over');
+        });
+
+        originalPreview.addEventListener('dragleave', () => {
+            originalPreview.classList.remove('drag-over');
+        });
+
+        originalPreview.addEventListener('drop', (e) => {
+            e.preventDefault();
+            originalPreview.classList.remove('drag-over');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleReplaceImage(files[0]);
+            }
         });
 
         function showNotification(message, type = 'success') {
