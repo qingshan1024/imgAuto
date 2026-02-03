@@ -558,7 +558,7 @@
                     editedCtx.drawImage(img, 0, 0);
                     
                     updateImageInfo();
-                    updateCompressedSize();
+                    setTimeout(updateCompressedSize, 100);
                     editorSection.classList.add('active');
                     uploadSection.style.display = 'none';
                 };
@@ -589,7 +589,7 @@
                     editedCtx.drawImage(img, 0, 0);
                     
                     updateImageInfo();
-                    updateCompressedSize();
+                    setTimeout(updateCompressedSize, 100);
                     showNotification('图片已替换！');
                 };
                 img.src = e.target.result;
