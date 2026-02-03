@@ -615,7 +615,13 @@
                 mimeType = 'image/jpeg';
             }
             
-            const dataUrl = editedCanvas.toDataURL(mimeType, quality);
+            let dataUrl;
+            if (selectedFormat === 'png') {
+                dataUrl = editedCanvas.toDataURL('image/png');
+            } else {
+                dataUrl = editedCanvas.toDataURL(mimeType, quality);
+            }
+            
             const base64Length = dataUrl.length - (dataUrl.indexOf(',') + 1);
             const padding = (base64Length % 4) ? 4 - (base64Length % 4) : 0;
             const binaryLength = Math.floor((base64Length * 3) / 4 - padding);
