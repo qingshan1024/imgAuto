@@ -450,6 +450,9 @@
                             <label>预估压缩后大小: <span class="range-value" id="compressedSize">-</span></label>
                         </div>
                         <div class="control-group">
+                            <label>压缩比: <span class="range-value" id="compressionRatio">-</span></label>
+                        </div>
+                        <div class="control-group">
                             <label>最大宽度 (px)</label>
                             <input type="number" id="maxWidth" min="1" placeholder="可选">
                         </div>
@@ -615,9 +618,13 @@
             const dataUrl = editedCanvas.toDataURL(mimeType, quality);
             const base64Length = dataUrl.length - (dataUrl.indexOf(',') + 1);
             const padding = (base64Length % 4) ? 4 - (base64Length % 4) : 0;
-            const binaryLength = (base64Length * 3) / 4 - padding;
+            const binaryLength = Math.floor((base64Length * 3) / 4 - padding);
+            
+            const originalSize = editedCanvas.width * editedCanvas.height * 4;
+            const ratio = originalSize > 0 ? ((1 - binaryLength / originalSize) * 100).toFixed(1) : 0;
             
             document.getElementById('compressedSize').textContent = formatFileSize(binaryLength);
+            document.getElementById('compressionRatio').textContent = ratio > 0 ? `-${ratio}%` : '0%';
         }
 
         function updateImageInfo() {
@@ -684,6 +691,7 @@
             editedCtx.drawImage(tempCanvas, 0, 0);
 
             updateImageInfo();
+            updateCompressedSize();
             showNotification('裁剪完成！');
         });
 
@@ -726,6 +734,7 @@
             editedCtx.drawImage(tempCanvas, 0, 0);
 
             updateImageInfo();
+            updateCompressedSize();
             showNotification('压缩完成！');
         });
 
@@ -742,6 +751,7 @@
                 document.querySelectorAll('.format-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 selectedFormat = btn.dataset.format;
+                updateCompressedSize();
             });
         });
 
