@@ -445,6 +445,7 @@
                         <div class="control-group">
                             <label>质量: <span class="range-value" id="qualityValue">80</span>%</label>
                             <input type="range" id="qualitySlider" min="1" max="100" value="80">
+                            <small style="color: #999; font-size: 0.85em; display: block; margin-top: 5px;" id="qualityHint">适用于 JPEG 和 WebP 格式</small>
                         </div>
                         <div class="control-group">
                             <label>预估压缩后大小: <span class="range-value" id="compressedSize">-</span></label>
@@ -559,6 +560,16 @@
                     
                     updateImageInfo();
                     setTimeout(updateCompressedSize, 100);
+                    
+                    const qualityHint = document.getElementById('qualityHint');
+                    if (selectedFormat === 'png') {
+                        qualityHint.textContent = 'PNG 是无损压缩格式，质量参数无效';
+                        qualityHint.style.color = '#dc3545';
+                    } else {
+                        qualityHint.textContent = '适用于 JPEG 和 WebP 格式';
+                        qualityHint.style.color = '#999';
+                    }
+                    
                     editorSection.classList.add('active');
                     uploadSection.style.display = 'none';
                 };
@@ -590,6 +601,16 @@
                     
                     updateImageInfo();
                     setTimeout(updateCompressedSize, 100);
+                    
+                    const qualityHint = document.getElementById('qualityHint');
+                    if (selectedFormat === 'png') {
+                        qualityHint.textContent = 'PNG 是无损压缩格式，质量参数无效';
+                        qualityHint.style.color = '#dc3545';
+                    } else {
+                        qualityHint.textContent = '适用于 JPEG 和 WebP 格式';
+                        qualityHint.style.color = '#999';
+                    }
+                    
                     showNotification('图片已替换！');
                 };
                 img.src = e.target.result;
@@ -757,6 +778,16 @@
                 document.querySelectorAll('.format-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 selectedFormat = btn.dataset.format;
+                
+                const qualityHint = document.getElementById('qualityHint');
+                if (selectedFormat === 'png') {
+                    qualityHint.textContent = 'PNG 是无损压缩格式，质量参数无效';
+                    qualityHint.style.color = '#dc3545';
+                } else {
+                    qualityHint.textContent = '适用于 JPEG 和 WebP 格式';
+                    qualityHint.style.color = '#999';
+                }
+                
                 updateCompressedSize();
             });
         });
